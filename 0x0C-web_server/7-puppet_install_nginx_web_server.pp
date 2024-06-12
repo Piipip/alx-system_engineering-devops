@@ -1,6 +1,24 @@
-#Installs Nginx web server
+# Setup New Ubuntu server with nginx
 
-exec {'Nginx Installation':
-  provider => shell,
-  command => 'apt-get update ; apt-get -y install nginx ; echo "Hello World!" > /var/www/html/index.html ; sed -i "s/server_name _;/server_name _;\n\tlocation \/redirect_me {\n\treturn 301 https:\/\/dev.to\/thegirlsynth;\n\t}/" /etc/nginx/sites-available/default ; service nginx restart',
+exec { 'update system':
+        command => '/usr/bin/apt-get update',
+}
+
+package { 'nginx':
+	ensure => 'installed',
+	require => Exec['update system']
+}
+
+file {'/var/www/html/index.html':
+	content => 'Hello World!'
+}
+
+exec {'redirect_me':
+	command => 'sed -i "24i\	rewrite ^/redirect_me https://www.youtube.com/watch?v=QH2-TGUlwu4 permanent;" /etc/nginx/sites-available/default',
+	provider => 'shell'
+}
+
+service {'nginx':
+	ensure => running,
+	require => Package['nginx']
 }
