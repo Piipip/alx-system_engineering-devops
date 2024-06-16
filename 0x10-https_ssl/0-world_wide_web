@@ -1,23 +1,16 @@
 #!/usr/bin/env bash
-#Displays information on subdomains. When no specific subdomain is provided, default subdomains are displayed.
+# print domains and subdomains
 
-domain="$1"
-subdomain="$2"
+print_domain_subdomain () {
+    dig "$1" | grep -A1 'ANSWER SECTION:' | sed -r "s/$1./$2/g" | awk -F" " ' NR==2 { print "The subdomain " $1 " is a " $4 " record and points to " $5 }'
+}
 
-function get_subdomain {
-	local subdomain="$1"
-	local record_type
-	local destination
-	record_type=$(dig "$subdomain.$domain" | awk '/^;; ANSWER SECTION:/ { getline; print $4 }')
-	destination=$(dig "$subdomain.$domain" | awk '/^;; ANSWER SECTION:/ { getline; print $5 }')
-	echo "The subdomain $subdomain is a $record_type record and points to $destination"
-	}
-
-if [ -z "$subdomain" ]; then
-	get_subdomain "www"
-	get_subdomain "lb-01"
-	get_subdomain "web-01"
-	get_subdomain "web-02"
+if [ "$#" -eq 2 ]
+then
+    print_domain_subdomain "$2.$1" "$2"
 else
-	get_subdomain "$subdomain"
+    print_domain_subdomain "www.$1" "www"
+    print_domain_subdomain "lb-01.$1" "lb-01"
+    print_domain_subdomain "web-01.$1" "web-01"
+    print_domain_subdomain "web-02.$1" "web-02"
 fi
